@@ -1,0 +1,110 @@
+<section>
+    <header>
+        <h2 class="text-lg font-medium text-gray-900">
+            {{ __('Información del Perfil') }}
+        </h2>
+
+        <p class="mt-1 text-sm text-gray-600">
+            {{ __('Actualiza tu información personal, foto de perfil y enlaces de contacto.') }}
+        </p>
+    </header>
+
+    <form id="send-verification" method="post" action="{{ route('verification.send') }}">
+        @csrf
+    </form>
+
+    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="mt-6 space-y-6">
+        @csrf
+        @method('patch')
+
+        <!-- Foto de Perfil Actual y Carga -->
+        <div>
+            <x-input-label for="photo" :value="__('Foto de Perfil')" />
+            
+            @if ($user->photo_path)
+                <div class="mt-2 mb-3">
+                    <img src="{{ asset('storage/' . $user->photo_path) }}" alt="Foto de {{ $user->name }}" class="w-24 h-24 rounded-full object-cover border border-gray-300">
+                </div>
+            @endif
+
+            <input id="photo" name="photo" type="file" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+            <x-input-error class="mt-2" :messages="$errors->get('photo')" />
+        </div>
+
+        <!-- Nombre -->
+        <div>
+            <x-input-label for="name" :value="__('Nombre')" />
+            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
+            <x-input-error class="mt-2" :messages="$errors->get('name')" />
+        </div>
+
+        <!-- Email -->
+        <div>
+            <x-input-label for="email" :value="__('Email')" />
+            <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" />
+            <x-input-error class="mt-2" :messages="$errors->get('email')" />
+
+            @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
+                <div>
+                    <p class="text-sm mt-2 text-gray-800">
+                        {{ __('Tu correo electrónico no está verificado.') }}
+
+                        <button form="send-verification" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            {{ __('Haz clic aquí para reenviar el correo de verificación.') }}
+                        </button>
+                    </p>
+
+                    @if (session('status') === 'verification-link-sent')
+                        <p class="mt-2 font-medium text-sm text-green-600">
+                            {{ __('Se ha enviado un nuevo enlace de verificación a tu correo electrónico.') }}
+                        </p>
+                    @endif
+                </div>
+            @endif
+        </div>
+
+        <!-- Teléfono con enlace directo a WhatsApp -->
+        <div>
+            <x-input-label for="phone" :value="__('Teléfono (Opcional)')" />
+            <x-text-input id="phone" name="phone" type="text" class="mt-1 block w-full" :value="old('phone', $user->phone)" placeholder="Ej: 3704123456" />
+            <x-input-error class="mt-2" :messages="$errors->get('phone')" />
+
+            @if ($user->whatsapp_url)
+                <p class="mt-1 text-sm">
+                    <a href="{{ $user->whatsapp_url }}" target="_blank" rel="noopener noreferrer" class="text-green-600 hover:text-green-800 underline font-medium">
+                        Probar enlace directo a WhatsApp ({{ $user->phone }})
+                    </a>
+                </p>
+            @endif
+        </div>
+
+        <!-- Enlace a Red Profesional -->
+        <div>
+            <x-input-label for="professional_url" :value="__('Enlace a Red Profesional - LinkedIn, GitHub, etc. (Opcional)')" />
+            <x-text-input id="professional_url" name="professional_url" type="url" class="mt-1 block w-full" :value="old('professional_url', $user->professional_url)" placeholder="https://github.com" />
+            <x-input-error class="mt-2" :messages="$errors->get('professional_url')" />
+
+            @if ($user->professional_url)
+                <p class="mt-1 text-sm">
+                    <a href="{{ $user->professional_url }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline font-medium">
+                        Abrir perfil profesional en nueva pestaña
+                    </a>
+                </p>
+            @endif
+        </div>
+
+        <div class="flex items-center gap-4">
+            <x-primary-button>{{ __('Guardar') }}</x-primary-button>
+
+            @if (session('status') === 'profile-updated')
+                <p
+                    x-data="{ show: true }"
+                    x-show="show"
+                    x-transition
+                    x-init="setTimeout(() => show = false, 2000)"
+                    class="text-sm text-gray-600"
+                >{{ __('Guardado.') }}</p>
+            @endif
+        </div>
+    </form>
+</section>
